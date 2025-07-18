@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+    --primary: 213 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 20%;
+    --muted: 0 0% 97%;
+    --muted-foreground: 0 0% 20%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 20%;
+    --destructive: 354 70% 54%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 213 100% 40%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 213 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 10%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 354 70% 54%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 213 100% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom Echo styles */
+.echo-gradient {
+  background: linear-gradient(135deg, #0052cc 0%, #2a9d8f 100%);
+}
+
+.echo-card {
+  @apply bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow;
+}
+
+.echo-button-primary {
+  @apply bg-echo-trust hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition-colors;
+}
+
+.echo-button-success {
+  @apply bg-echo-validation hover:bg-teal-700 text-white font-medium px-4 py-2 rounded-md transition-colors;
+}
+
+.echo-button-danger {
+  @apply bg-echo-alert hover:bg-red-700 text-white font-medium px-4 py-2 rounded-md transition-colors;
+}
