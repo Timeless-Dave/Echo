@@ -450,24 +450,85 @@ export default function SubmitReportPage() {
       return
     }
 
+    if (!user?.email) {
+      toast({
+        title: "Authentication Error",
+        description: "User email is not available. Please log in again.",
+        variant: "destructive"
+      })
+      return
+    }
+
     setIsLoading(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Import services
+      const { mantaHQAPI } = await import('@/lib/mantahq-api')
+      const { firebaseStorageService } = await import('@/lib/firebase-storage')
       
-      toast({
-        title: "Report Submitted Successfully",
-        description: formData.isAnonymous 
-          ? "Your anonymous report has been submitted and is under review." 
-          : "Your report has been submitted. You may be contacted for additional information.",
-      })
+      // Upload files first if any
+      let evidenceUrls: string[] = []
+      if (formData.files.length > 0) {
+        try {
+          evidenceUrls = await firebaseStorageService.uploadReportEvidence(formData.files)
+        } catch (uploadError) {
+          console.warn('File upload failed, proceeding without evidence:', uploadError)
+          // Continue without evidence URLs rather than failing completely
+        }
+      }
       
-      router.push("/reports")
-    } catch (error) {
+      // Format the data for MantaHQ API
+      const reportData = mantaHQAPI.formatReportData(formData, user.email)
+      reportData.aiScore = aiScore
+      
+      // Add evidence URLs if uploaded successfully
+      if (evidenceUrls.length > 0) {
+        reportData.evidence = evidenceUrls
+      }
+      
+      // Submit to MantaHQ API
+      const response = await mantaHQAPI.submitReport(reportData)
+      
+      if (response.success) {
+        toast({
+          title: "Report Submitted Successfully! 🎉",
+          description: formData.isAnonymous 
+            ? "Your anonymous report has been submitted to the news store and is under review." 
+            : "Your report has been submitted to the news store. You may be contacted for additional information.",
+        })
+        
+        // Optional: Clear form data
+        setFormData({
+          title: "",
+          category: "",
+          customCategory: "",
+          location: "",
+          customLocation: "",
+          incidentDate: undefined,
+          timeOfIncident: "",
+          description: "",
+          evidence: "",
+          isAnonymous: true,
+          severity: "medium",
+          tags: [],
+          contactEmail: "",
+          contactPhone: "",
+          witnessCount: "",
+          previousReports: false,
+          consentToContact: false,
+          files: []
+        })
+        
+        router.push("/reports")
+      } else {
+        throw new Error(response.message)
+      }
+    } catch (error: any) {
+      console.error('Report submission error:', error)
+      
       toast({
         title: "Submission Failed",
-        description: "There was an error submitting your report. Please try again.",
+        description: error.message || "There was an error submitting your report. Please try again.",
         variant: "destructive"
       })
     } finally {
