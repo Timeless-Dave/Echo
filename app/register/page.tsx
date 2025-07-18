@@ -162,7 +162,7 @@ export default function RegisterPage() {
                     <Input
                       id="schoolId"
                       type="text"
-                      placeholder="STU-2024-001"
+                      placeholder="STU-2025-001"
                       value={schoolId}
                       onChange={(e) => setSchoolId(e.target.value)}
                       required

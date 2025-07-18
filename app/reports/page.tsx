@@ -115,7 +115,7 @@ const fallbackReports = [
       <p>A sophisticated admission fraud scheme at the Federal University of Technology Akure (FUTA) has been uncovered, involving the manipulation of JAMB scores and academic transcripts to secure admission for unqualified candidates in exchange for substantial payments.</p>
       
       <h2>Scale of the Operation</h2>
-      <p>Initial investigations suggest that over 200 students gained admission through fraudulent means between 2022 and 2024, with individual payments ranging from ₦150,000 to ₦500,000 depending on the competitiveness of the program.</p>
+                        <p>Initial investigations suggest that over 200 students gained admission through fraudulent means between 2022 and 2025, with individual payments ranging from ₦150,000 to ₦500,000 depending on the competitiveness of the program.</p>
       
       <h2>How the Scheme Worked</h2>
       <p>The fraud involved several key components:</p>

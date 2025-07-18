@@ -65,7 +65,7 @@ const getReportById = (id: string) => {
       views: 1543,
       shares: 89,
       timeAgo: "3 hours ago",
-      publishedDate: "December 15, 2024",
+      publishedDate: "December 15, 2025",
       readTime: "5 min read",
       location: "University of Lagos",
       author: "Anonymous Student",

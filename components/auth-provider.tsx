@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const mockUser: User = {
       id: "user-123",
       email,
-      schoolId: "STU-2024-001",
+      schoolId: "STU-2025-001",
       isVerified: true,
     }
     setUser(mockUser)

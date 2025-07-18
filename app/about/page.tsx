@@ -346,7 +346,7 @@ export default function AboutPage() {
             Empowering student voices through secure, anonymous reporting.
           </p>
           <p className="text-gray-500 text-sm mt-2">
-            © 2024 Echo. Building safer campuses together.
+            © 2025 Echo. Building safer campuses together.
           </p>
         </div>
       </footer>
