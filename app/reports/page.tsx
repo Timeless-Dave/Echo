@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Navigation from "@/components/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -40,13 +40,16 @@ import {
   Star,
   CheckCircle,
   Flame,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Edit3
 } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/components/auth-provider"
+import { mantaHQAPI } from "@/lib/mantahq-api"
+import { EditReportModal } from "@/components/ui/edit-report-modal"
 
-// Enhanced mock data for blog-style reports with image support
-const mockReports = [
+// Fallback mock data for when API is unavailable
+const fallbackReports = [
   {
     id: "1",
     title: "Systematic Harassment in University of Lagos Female Hostels: A Pattern of Silence",
@@ -94,7 +97,7 @@ const mockReports = [
     tags: ["harassment", "hostel", "UNILAG", "safety"]
   },
   {
-    id: "2", 
+    id: "2",
     title: "₦50 Million Admission Fraud Exposed at Federal University of Technology Akure",
     category: "fraud",
     aiScore: 92,
@@ -407,7 +410,12 @@ const ShareModal = ({ report, onClose }: { report: any, onClose: () => void }) =
   )
 }
 
-const ReportCard = ({ report, onClick }: { report: any, onClick: () => void }) => {
+const ReportCard = ({ report, onClick, onEdit, canEdit }: { 
+  report: any, 
+  onClick: () => void,
+  onEdit?: () => void,
+  canEdit?: boolean 
+}) => {
   const [userVote, setUserVote] = useState<'up' | 'down' | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
@@ -589,6 +597,17 @@ const ReportCard = ({ report, onClick }: { report: any, onClick: () => void }) =
                   >
                     <Download className="w-4 h-4" />
                   </Button>
+                  
+                  {canEdit && onEdit && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onEdit}
+                      className="gap-1 text-gray-600 dark:text-gray-400 hover:text-blue-500"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
               
@@ -701,8 +720,8 @@ const ReportModal = ({ report, onClose }: { report: any, onClose: () => void }) 
           
           <Separator />
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -742,13 +761,98 @@ export default function ReportsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortBy, setSortBy] = useState("recent")
   const [selectedReport, setSelectedReport] = useState<any>(null)
+  const [reports, setReports] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [editingReport, setEditingReport] = useState<any>(null)
   const { user } = useAuth()
 
-  const filteredReports = mockReports.filter((report) => {
+  // Fetch reports from MantaHQ API
+  useEffect(() => {
+    async function fetchReports() {
+      setIsLoading(true)
+      setError(null)
+      
+      try {
+        const response = await mantaHQAPI.fetchReports()
+        
+        if (response.success) {
+          // Transform API data to match our component format
+          const transformedReports = response.data.map((report: any, index: number) => ({
+            id: report.id || `api-${index}`,
+            title: report.title || 'Untitled Report',
+            category: report.category || 'custom',
+            aiScore: report.aiScore || 70,
+            upvotes: report.votes?.upvotes || Math.floor(Math.random() * 100),
+            downvotes: report.votes?.downvotes || Math.floor(Math.random() * 20),
+            views: Math.floor(Math.random() * 2000) + 100,
+            shares: Math.floor(Math.random() * 50) + 10,
+            timeAgo: report.timestamp ? new Date(report.timestamp).toLocaleDateString() : 'Recently',
+            readTime: `${Math.floor(Math.random() * 8) + 3} min read`,
+            location: report.location || 'Nigerian University',
+            excerpt: report.reportText ? report.reportText.substring(0, 200) + '...' : 'No description available',
+            reportText: report.reportText || 'Full content not available', // Add this for editing
+            fullContent: `<div class="space-y-4">
+              <p>${report.reportText || 'Full content not available'}</p>
+              ${report.additionalContext ? `<div class="mt-4"><h3 class="font-semibold">Additional Context:</h3><p>${report.additionalContext}</p></div>` : ''}
+              ${report.evidence && report.evidence.length > 0 ? `<div class="mt-4"><h3 class="font-semibold">Evidence:</h3><ul>${report.evidence.map((e: string) => `<li><a href="${e}" target="_blank" class="text-blue-600">${e}</a></li>`).join('')}</ul></div>` : ''}
+            </div>`,
+            isVerified: report.isAnonymous === false,
+            isPremium: (report.aiScore || 0) > 85,
+            tags: report.tags || [report.category || 'general'],
+            isAnonymous: report.isAnonymous !== false,
+            severity: report.severity || 'medium',
+            witnessCount: report.witnessCount || 'unknown',
+            incidentDate: report.incidentDate ? new Date(report.incidentDate).toLocaleDateString() : null,
+            timeOfIncident: report.timeOfIncident || null,
+            userEmail: report.email // Store the original email for edit permission checking
+          }))
+          
+          setReports(transformedReports)
+        } else {
+          console.warn('Failed to fetch reports:', response.message)
+          setReports(fallbackReports)
+        }
+      } catch (error) {
+        console.error('Error fetching reports:', error)
+        setError('Failed to load reports. Showing sample data.')
+        setReports(fallbackReports)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchReports()
+  }, [])
+
+  const handleReportUpdate = (reportId: string, updatedContent: string) => {
+    setReports(prevReports => 
+      prevReports.map(report => 
+        report.id === reportId 
+          ? { 
+              ...report, 
+              reportText: updatedContent,
+              excerpt: updatedContent.substring(0, 200) + '...',
+              fullContent: `<div class="space-y-4"><p>${updatedContent}</p></div>`
+            }
+          : report
+      )
+    )
+  }
+
+  const canEditReport = (report: any) => {
+    // User can edit if they're the author (email matches) or if it's a fallback report and they're logged in
+    return user && (
+      user.email === report.userEmail || 
+      (!report.userEmail && report.id?.startsWith('fallback-'))
+    )
+  }
+
+  const filteredReports = reports.filter((report) => {
     const matchesSearch =
       report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      report.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesCategory = selectedCategory === "all" || report.category === selectedCategory
     return matchesSearch && matchesCategory
   })
@@ -783,77 +887,123 @@ export default function ReportsPage() {
           </p>
         </div>
 
-        {/* Filters */}
+            {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4 flex-1">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
+                <Input
                 placeholder="Search reports, tags, locations..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-full sm:w-48">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="harassment">Harassment</SelectItem>
-                <SelectItem value="fraud">Fraud</SelectItem>
-                <SelectItem value="safety">Safety</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={sortBy} onValueChange={setSortBy}>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="harassment">Harassment</SelectItem>
+                  <SelectItem value="fraud">Fraud</SelectItem>
+                  <SelectItem value="safety">Safety</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Most Recent</SelectItem>
-                <SelectItem value="votes">Most Voted</SelectItem>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Most Recent</SelectItem>
+                  <SelectItem value="votes">Most Voted</SelectItem>
                 <SelectItem value="views">Most Viewed</SelectItem>
                 <SelectItem value="trending">Trending</SelectItem>
-                <SelectItem value="aiScore">AI Score</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
+                  <SelectItem value="aiScore">AI Score</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
           {user && (
             <Button asChild className="bg-echo-alert hover:bg-red-700">
               <Link href="/submit">
                 <FileText className="w-4 h-4 mr-2" />
                 Submit Report
-              </Link>
-            </Button>
+                                </Link>
+                                </Button>
           )}
-        </div>
+                              </div>
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-echo-trust mx-auto mb-4"></div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Loading reports...</h3>
+            <p className="text-gray-600 dark:text-gray-400">Fetching the latest campus reports from our database</p>
+                              </div>
+        )}
+
+        {/* Error State */}
+        {error && !isLoading && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 mb-8">
+            <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+              <AlertTriangle className="w-5 h-5" />
+              <span className="font-medium">Notice</span>
+            </div>
+            <p className="text-yellow-700 dark:text-yellow-300 mt-2">{error}</p>
+          </div>
+        )}
 
         {/* Results Count */}
-        <div className="text-gray-600 dark:text-gray-400">
-          Showing {sortedReports.length} reports
-        </div>
+        {!isLoading && (
+          <div className="flex items-center justify-between">
+            <div className="text-gray-600 dark:text-gray-400">
+              Showing {sortedReports.length} reports {reports.length > 0 && `(${reports.length} total)`}
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {reports.length > 0 && reports.some(r => r.id?.startsWith('api-')) && (
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  Live data from API
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Reports Grid */}
-        <div className="space-y-8">
-          {sortedReports.map((report) => (
-            <ReportCard
-              key={report.id}
-              report={report}
-              onClick={() => setSelectedReport(report)}
-            />
-          ))}
-        </div>
+        {!isLoading && (
+          <div className="space-y-8">
+            {sortedReports.map((report) => (
+              <ReportCard
+                key={report.id}
+                report={report}
+                onClick={() => setSelectedReport(report)}
+                onEdit={() => setEditingReport(report)}
+                canEdit={canEditReport(report)}
+              />
+            ))}
+          </div>
+        )}
 
-        {sortedReports.length === 0 && (
+        {/* No Results State */}
+        {!isLoading && sortedReports.length === 0 && !error && (
           <div className="text-center py-12">
             <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No reports found</h3>
-            <p className="text-gray-600 dark:text-gray-400">Try adjusting your search terms or filters</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              {reports.length === 0 
+                ? "No reports have been submitted yet. Be the first to share your story!" 
+                : "Try adjusting your search terms or filters"}
+            </p>
+            {user && reports.length === 0 && (
+              <Button asChild className="mt-4 bg-echo-trust">
+                <Link href="/submit">Submit First Report</Link>
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -862,6 +1012,18 @@ export default function ReportsPage() {
         <ReportModal 
           report={selectedReport} 
           onClose={() => setSelectedReport(null)} 
+        />
+      )}
+
+      {editingReport && (
+        <EditReportModal
+          report={editingReport}
+          open={!!editingReport}
+          onClose={() => setEditingReport(null)}
+          onUpdate={(updatedContent) => {
+            handleReportUpdate(editingReport.id, updatedContent)
+            setEditingReport(null)
+          }}
         />
       )}
     </div>

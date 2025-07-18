@@ -401,7 +401,7 @@ export default function SubmitReportPage() {
   useEffect(() => {
     const calculateAIScore = () => {
       let score = 0
-      
+
       // Basic information (30 points)
       if (formData.title.length > 10) score += 15
       if (formData.category) score += 10
@@ -422,10 +422,10 @@ export default function SubmitReportPage() {
       if (formData.timeOfIncident) score += 2
       if (formData.tags.length > 0) score += 3
       if (formData.previousReports) score += 2
-      
+
       setAiScore(Math.min(score, 100))
     }
-    
+
     calculateAIScore()
   }, [formData])
 
@@ -460,7 +460,7 @@ export default function SubmitReportPage() {
     }
 
     setIsLoading(true)
-    
+
     try {
       // Import services
       const { mantaHQAPI } = await import('@/lib/mantahq-api')
@@ -490,7 +490,7 @@ export default function SubmitReportPage() {
       const response = await mantaHQAPI.submitReport(reportData)
       
       if (response.success) {
-        toast({
+      toast({
           title: "Report Submitted Successfully! 🎉",
           description: formData.isAnonymous 
             ? "Your anonymous report has been submitted to the news store and is under review." 
@@ -517,9 +517,9 @@ export default function SubmitReportPage() {
           previousReports: false,
           consentToContact: false,
           files: []
-        })
-        
-        router.push("/reports")
+      })
+
+      router.push("/reports")
       } else {
         throw new Error(response.message)
       }
@@ -556,9 +556,9 @@ export default function SubmitReportPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <Navigation />
-      
-      <div className="container mx-auto px-4 py-8">
+        <Navigation />
+
+        <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
@@ -566,8 +566,8 @@ export default function SubmitReportPage() {
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Share your story safely. Your voice creates positive change on campus.
-          </p>
-        </div>
+              </p>
+            </div>
 
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-5 gap-8">
@@ -577,12 +577,12 @@ export default function SubmitReportPage() {
                 <CardHeader className="border-b border-gray-200 dark:border-gray-700">
                   <CardTitle className="text-2xl text-gray-900 dark:text-white flex items-center gap-2">
                     <Megaphone className="w-6 h-6 text-echo-trust" />
-                    Report Details
-                  </CardTitle>
-                  <CardDescription>
+                  Report Details
+                </CardTitle>
+                <CardDescription>
                     Provide information about the incident you want to report
-                  </CardDescription>
-                </CardHeader>
+                </CardDescription>
+              </CardHeader>
 
                 <CardContent className="p-8 space-y-8">
                   {/* Title */}
@@ -654,13 +654,13 @@ export default function SubmitReportPage() {
                       >
                         <SelectTrigger className="h-12">
                           <SelectValue placeholder="Select your university" />
-                        </SelectTrigger>
-                        <SelectContent>
+                      </SelectTrigger>
+                      <SelectContent>
                           {nigerianUniversities.map((uni) => (
                             <SelectItem key={uni} value={uni}>{uni}</SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
+                      </SelectContent>
+                    </Select>
                       
                       {formData.location === "Other Nigerian University" && (
                         <Input
@@ -810,7 +810,7 @@ Be as detailed as possible - your story matters."
                       />
                       <Button type="button" onClick={addTag} variant="outline">
                         <Plus className="w-4 h-4" />
-                      </Button>
+                        </Button>
                     </div>
                     {formData.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2">
@@ -825,10 +825,10 @@ Be as detailed as possible - your story matters."
                               className="h-auto p-0 hover:bg-transparent"
                             >
                               <X className="w-3 h-3" />
-                            </Button>
+                              </Button>
                           </Badge>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
                     )}
                   </div>
 
@@ -872,7 +872,7 @@ Be as detailed as possible - your story matters."
                         />
                         <Label htmlFor="consentToContact" className="text-sm">
                           I consent to being contacted about this report for clarification
-                        </Label>
+                      </Label>
                       </div>
                     </div>
                   )}
@@ -896,7 +896,7 @@ Be as detailed as possible - your story matters."
                           Publish Report
                         </>
                       )}
-                    </Button>
+                  </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -969,8 +969,8 @@ Be as detailed as possible - your story matters."
                         <p>Use the anonymous option for sensitive matters</p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+              </CardContent>
+            </Card>
 
                 {/* Emergency Alert */}
                 <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">

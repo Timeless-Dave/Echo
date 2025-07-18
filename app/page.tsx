@@ -139,7 +139,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="py-8 px-4 bg-gray-50 dark:bg-gray-900 border-t">
         <div className="container mx-auto text-center text-gray-600 dark:text-gray-400">
-          <p>&copy; 2024 Echo. Empowering student voices through secure reporting.</p>
+          <p>&copy; 2025 Echo. Empowering student voices through secure reporting.</p>
         </div>
       </footer>
     </div>

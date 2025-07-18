@@ -23,11 +23,45 @@ interface ReportSubmissionData {
   aiScore?: number
 }
 
+interface ReportUpdateData {
+  content: string
+  email: string
+}
+
 interface MantaHQResponse {
   success: boolean
   message: string
   data?: any
   reportId?: string
+  statusCode?: number
+}
+
+interface ReportData {
+  id?: string
+  title: string
+  category: string
+  reportText: string
+  isAnonymous: boolean
+  evidence?: string[]
+  timestamp: string
+  location?: string
+  severity?: string
+  witnessCount?: string
+  tags?: string[]
+  incidentDate?: string
+  timeOfIncident?: string
+  additionalContext?: string
+  aiScore?: number
+  votes?: {
+    upvotes: number
+    downvotes: number
+  }
+}
+
+interface FetchReportsResponse {
+  success: boolean
+  data: ReportData[]
+  message?: string
 }
 
 export class MantaHQAPI {
@@ -84,6 +118,52 @@ export class MantaHQAPI {
     }
   }
 
+  async fetchReports(): Promise<FetchReportsResponse> {
+    try {
+      const response = await this.apiClient.get('/news-report')
+      
+      return {
+        success: true,
+        data: response.data?.data || response.data || [],
+        message: 'Reports fetched successfully'
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch reports:', error)
+      
+      return {
+        success: false,
+        data: [],
+        message: error.response?.data?.message || error.message || 'Failed to fetch reports'
+      }
+    }
+  }
+
+  async updatePost(data: ReportUpdateData): Promise<MantaHQResponse> {
+    try {
+      const response = await this.apiClient.patch('/update-post', data)
+      
+      return {
+        success: true,
+        message: response.data?.message || 'Post updated successfully',
+        data: response.data,
+        statusCode: response.status
+      }
+    } catch (error: any) {
+      const statusCode = error.response?.status || 500
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Failed to update post'
+      
+      return {
+        success: false,
+        message: errorMessage,
+        data: error.response?.data,
+        statusCode
+      }
+    }
+  }
+
   validateEmailDomain(email: string): boolean {
     const eduDomains = [
       '.edu.ng',
@@ -119,6 +199,59 @@ export class MantaHQAPI {
       customCategory: formData.category === 'custom' ? formData.customCategory : undefined,
       aiScore: undefined // Will be set by the calling component
     }
+  }
+
+  // Helper method to get category info for display
+  getCategoryInfo(category: string) {
+    const categories = {
+      harassment: {
+        label: 'Harassment & Discrimination',
+        color: 'bg-red-100 text-red-700 border-red-200',
+        icon: '❤️'
+      },
+      fraud: {
+        label: 'Academic Fraud & Corruption',
+        color: 'bg-orange-100 text-orange-700 border-orange-200',
+        icon: '💰'
+      },
+      safety: {
+        label: 'Safety & Security Concerns',
+        color: 'bg-blue-100 text-blue-700 border-blue-200',
+        icon: '🛡️'
+      },
+      exploitation: {
+        label: 'Financial Exploitation',
+        color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+        icon: '⚠️'
+      },
+      misconduct: {
+        label: 'Staff/Faculty Misconduct',
+        color: 'bg-purple-100 text-purple-700 border-purple-200',
+        icon: '👥'
+      },
+      facilities: {
+        label: 'Infrastructure & Facilities',
+        color: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+        icon: '🏗️'
+      },
+      debunk: {
+        label: 'Fact-Check & Debunking',
+        color: 'bg-green-100 text-green-700 border-green-200',
+        icon: '🔍'
+      },
+      anonymous_tip: {
+        label: 'Anonymous Tip/Information',
+        color: 'bg-teal-100 text-teal-700 border-teal-200',
+        icon: 'ℹ️'
+      },
+      custom: {
+        label: 'Custom Category',
+        color: 'bg-gray-100 text-gray-700 border-gray-200',
+        icon: '🎯'
+      }
+    }
+
+    return categories[category as keyof typeof categories] || categories.custom
   }
 }
 
